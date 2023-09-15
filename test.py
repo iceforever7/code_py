@@ -33,7 +33,7 @@ for content in txt.find_all("a"):
     num=content.get("href")#编号
     problem=content.string#题名
 
-    if num=="P1000" :
+    if num=="P1005" :
         
         """url_problem=(f"https://www.luogu.com.cn/problem/{num}")
         pyperclip.copy("")
@@ -60,9 +60,10 @@ for content in txt.find_all("a"):
         Chrome.get(url_solutin)
         ele=Chrome.page_source
         in_txt=BeautifulSoup(ele,features="lxml")
-        print(in_txt.find("marked"))
-        #file_path = f'c:\\Users\\尘\\Desktop\\题解\\tijie.md'
-        #with open(file_path, 'w',encoding='utf-8') as f:f.write()
+        md=in_txt.find(class_="marked")
+        #print(md.text)
+        file_path = f'C:\\Users\\Administrator\\Desktop\\题解\\tijie.md'
+        with open(file_path, 'w',encoding='utf-8') as f:f.write(md.text)
         time.sleep(5)
         
         
