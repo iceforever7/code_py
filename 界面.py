@@ -1,9 +1,19 @@
 import requests
-import sys
 import tkinter as tk
 from tkinter import messagebox
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
+import urllib.request,urllib.error
+import bs4,re
+import scrapy
+from scrapy.http  import  Request,FormRequest
+import selenium,time,pyperclip,pyautogui,os
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+import html2text
+import os
 
 #防止404
 headers={
@@ -44,13 +54,15 @@ keyword_entry.grid(row=2, column=1, padx=10, pady=10)
 result_label = tk.Label(root, text="搜索结果：")
 result_label.grid(row=6, column=0, padx=10, pady=10, columnspan=2)
 
-
+global txt,dit,ty,keyword
 # 筛选按钮
 def filter():
+    #获取键值
     difficulty = difficulty_var.get()
     tiku = tiku_var.get()
     keyword = keyword_var.get()
 
+    #难度选择
     if difficulty=="全部": dit=None
     elif difficulty=="暂无评定": dit=0
     elif difficulty=="入门": dit=1
@@ -61,35 +73,91 @@ def filter():
     elif difficulty=="省选/NOI-": dit=6
     elif difficulty=="NOI/NOI+/CTSC": dit=7
 
-    if tiku=="洛谷": type="B%7CP"
-    elif tiku=="主题库":type="P"
-    elif tiku=="入门与面试":type="B"
-    elif tiku=="CodeForces":type="CF"
-    elif tiku=="SPOJ":type="SP"
-    elif tiku=="AtCoder":type="AT"
-    elif tiku=="UVA":type="UVA"
+    #题库选择
+    if tiku=="洛谷": ty="B%7CP"
+    elif tiku=="主题库":ty="P"
+    elif tiku=="入门与面试":ty="B"
+    elif tiku=="CodeForces":ty="CF"
+    elif tiku=="SPOJ":ty="SP"
+    elif tiku=="AtCoder":ty="AT"
+    elif tiku=="UVA":ty="UVA"
 
-    response=requests.get(f"https://www.luogu.com.cn/problem/list?type={type}&difficulty={dit}&page={1}&keyword={keyword}",headers=headers)
-    html=response.text
-    txt=BeautifulSoup(html,features="lxml")
-
-    for content in txt.find_all("a"):
-        num=content.get("href")
-        problem=content.string #题目
-        
-        if num=="P1000":
-            in_response=requests.get(f"https://www.luogu.com.cn/problem/{num}",headers=headers)
-            in_html=in_response.text
-            in_txt=BeautifulSoup(in_html,features="lxml")
-            print(in_txt)
-            
-
+    Chrome= webdriver.Chrome()
+    url_search=f"https://www.luogu.com.cn/problem/list?type={ty}&difficulty={dit}&page={1}&keyword={keyword}"
+    Chrome.get(url_search)
+    html=Chrome.page_source
+    txt=BeautifulSoup(html,"html.parser")
+    all_problem=txt.find(class_="number").text
+    print(all_problem)
+    
     # TODO: 根据难度和关键字进行筛选算法
-    result_label.config(text="搜索结果：难度:{} 题库:{} 关键字:{} ".format(difficulty,tiku,keyword)) 
+    #result_label.config(text="搜索结果：难度:{} 题库:{} 关键字:{} ".format(difficulty,tiku,keyword)) 
 
-        
 filter_button = tk.Button(root, text="筛选", command=filter)
 filter_button.grid(row=3, column=0, padx=10, pady=10)
+
+def run_or_die():
+    #解析题库页
+    
+
+
+    for content in txt.find_all("a"):
+        num=content.get("href")#编号
+        problem=content.string#题名
+
+        if '?' not in num :
+            Chrome= webdriver.Chrome()
+            path=f"C:\\Users\\尘\Desktop\\题解\\{dit}-{keyword}\\{num}-{problem}"
+            
+            if not os.path.exists(path):
+                os.makedirs(path)
+
+            url_problem=(f"https://www.luogu.com.cn/problem/{num}")
+            pyperclip.copy("")
+            l=""
+            Chrome.get(url_problem)
+            WebDriverWait(Chrome,20)
+            time.sleep(1)
+            Chrome.find_element(By.XPATH,'//*[@id="app"]/div[2]/main/div/section[2]/section/div/div[1]/a[1]').click()
+            if(pyperclip.paste()!=l):
+                text = pyperclip.paste()
+                with open(os.path.join(path,f"{num}-{problem}.md"), 'w',encoding='utf-8') as f:f.write(text)
+            #题目
+
+            
+            url_solutin=(f"https://www.luogu.com.cn/problem/solution/{num}")
+            Chrome.get(url_solutin)
+            new_cookie =  {'domain': 'www.luogu.com.cn', 'expiry': 1694747291, 'httpOnly': False, 'name': 'C3VK', 'path': '/', 'sameSite': 'Lax', 'secure': False, 'value': 'e3c0b2'}
+            Chrome.add_cookie(new_cookie)
+            new_cookie = {'domain': '.luogu.com.cn', 'expiry': 1697338993, 'httpOnly': True, 'name': '_uid', 'path': '/', 'sameSite': 'None', 'secure': True, 'value': '667218'}
+            Chrome.add_cookie(new_cookie)
+            new_cookie = {'domain': '.luogu.com.cn', 'expiry': 1697338975, 'httpOnly': True, 'name': '__client_id', 'path': '/', 'sameSite': 'None', 'secure': True, 'value': '4c5dcd654c6e51204df13357faf7401edb5f7f3a'}
+            Chrome.add_cookie(new_cookie)
+            Chrome.get(url_solutin)
+
+            ele=Chrome.page_source
+            in_txt=BeautifulSoup(ele,"html.parser")
+            md=in_txt.find(class_="solution-article")
+            m="<h1>"+md.prettify()
+            markdown=html2text.html2text(m)
+            with open(os.path.join(path,f"{num}-{problem}-题解.md"), 'w',encoding='utf-8') as f:f.write(markdown)
+            #题解
+
+            time.sleep(5)
+            
+            
+    
+            time.sleep(30)
+            Chrome.get(url_solutin)
+            cookie= Chrome.get_cookies()
+            print(cookie)
+            #获取登录cookie
+
+            
+        Chrome.quit()
+     
+run_button = tk.Button(root,text="崩溃",command=run_or_die)
+run_button.grid(row=4,column=0,padx=10,pady=10)
 
 
 

@@ -5,63 +5,80 @@ from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 import urllib.request,urllib.error
 import bs4,re
+import scrapy
+from scrapy.http  import  Request,FormRequest
+import selenium,time,pyperclip,pyautogui,os
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+import html2text
+import os
 
-savePath = "C:\\Users\\Administrator\\Desktop\\题解\\"
-#保存路径
 
 headers={
     "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36",
-    "Cookie":"login_referer=https%3A%2F%2Fwww.luogu.com.cn%2Fauth%2Flogin;_uid=667218;__client_id=74a5e8b36aa466ce90a9399a9c4004aa7bb6efc0;C3VK=0d19c2"
+    "Cookie":"c"
 }
 #防止404和跳过登录
 
-def getHTML(url):
-    request = urllib.request.Request(url = url,headers = headers)
-    response = urllib.request.urlopen(request)
-    html = response.read().decode('utf-8')
-    return html#获取页面
-
-def getMD(html):
-    bs = bs4.BeautifulSoup(html,"html.parser")
-    core = bs.select("article")[0]
-    md = str(core)
-    md = re.sub("<h1>","# ",md)
-    md = re.sub("<h2>","## ",md)
-    md = re.sub("<h3>","#### ",md)
-    md = re.sub("</?[a-zA-Z]+[^<>]*>","",md)
-    return md#修改格式
-
-def saveData(data,filename):
-    cfilename = savePath + filename
-    file = open(cfilename,"w",encoding="utf-8")
-    for d in data:
-        file.writelines(d)
-    file.close()#保存文件
-
-
-response=requests.get("https://www.luogu.com.cn/problem/list?page=1",headers=headers)
-html=response.text
+responses=requests.get("https://www.luogu.com.cn/problem/list?page=1",headers=headers)
+html=responses.text
 txt=BeautifulSoup(html,features="lxml")
 #获取page内容
+
 
 
 for content in txt.find_all("a"):
     num=content.get("href")#编号
     problem=content.string#题名
 
-    if "P" in num :
+    if num=="P1005" :
+        Chrome= webdriver.Chrome()
+        path=f"C:\\Users\\尘\Desktop\\题解\\{num}-{problem}"
+        if not os.path.exists(path):
+            os.makedirs(path)
+
         url_problem=(f"https://www.luogu.com.cn/problem/{num}")
+        pyperclip.copy("")
+        l=""
+        Chrome.get(url_problem)
+        WebDriverWait(Chrome,20)
+        time.sleep(1)
+        Chrome.find_element(By.XPATH,'//*[@id="app"]/div[2]/main/div/section[2]/section/div/div[1]/a[1]').click()
+        if(pyperclip.paste()!=l):
+            text = pyperclip.paste()
+            with open(os.path.join(path,f"{num}-{problem}.md"), 'w',encoding='utf-8') as f:f.write(text)
+        #题目
+
+        
         url_solutin=(f"https://www.luogu.com.cn/problem/solution/{num}")
+        Chrome.get(url_solutin)
+        new_cookie =  {'domain': 'www.luogu.com.cn', 'expiry': 1694747291, 'httpOnly': False, 'name': 'C3VK', 'path': '/', 'sameSite': 'Lax', 'secure': False, 'value': 'e3c0b2'}
+        Chrome.add_cookie(new_cookie)
+        new_cookie = {'domain': '.luogu.com.cn', 'expiry': 1697338993, 'httpOnly': True, 'name': '_uid', 'path': '/', 'sameSite': 'None', 'secure': True, 'value': '667218'}
+        Chrome.add_cookie(new_cookie)
+        new_cookie = {'domain': '.luogu.com.cn', 'expiry': 1697338975, 'httpOnly': True, 'name': '__client_id', 'path': '/', 'sameSite': 'None', 'secure': True, 'value': '4c5dcd654c6e51204df13357faf7401edb5f7f3a'}
+        Chrome.add_cookie(new_cookie)
+        Chrome.get(url_solutin)
+        ele=Chrome.page_source
+        in_txt=BeautifulSoup(ele,"html.parser")
+        md=in_txt.find(class_="solution-article")
+        m="<h1>"+md.prettify()
+        markdown=html2text.html2text(m)
+        with open(os.path.join(path,f"{num}-{problem}-题解.md"), 'w',encoding='utf-8') as f:f.write(markdown)
+        #题解
 
-        in_problem=requests.get(url_problem,headers=headers).text#题目
-        in_solution=requests.get(url_solutin,headers=headers).text#题解
-
-        print("正在爬取{}".format(num))
-        in_html = getHTML(url_problem)
-        problemMD = getMD(in_html)
-        saveData(problemMD,num+"-"+problem+".md")
-        print("爬取完毕")#题目导出
+        time.sleep(5)
         
         
-    
+        """
+        time.sleep(30)
+        Chrome.get(url_solutin)
+        cookie= Chrome.get_cookies()
+        print(cookie)
+        #获取登录cookie"""
+
+        
+Chrome.quit()
 #获取

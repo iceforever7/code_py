@@ -28,57 +28,15 @@ txt=BeautifulSoup(html,features="lxml")
 #获取page内容
 
 
-
-for content in txt.find_all("a"):
-    num=content.get("href")#编号
-    problem=content.string#题名
-
-    if num=="P1005" :
-        Chrome= webdriver.Chrome()
-        path=f"C:\\Users\\尘\Desktop\\题解\\{num}-{problem}"
-        if not os.path.exists(path):
-            os.makedirs(path)
-
-        url_problem=(f"https://www.luogu.com.cn/problem/{num}")
-        pyperclip.copy("")
-        l=""
-        Chrome.get(url_problem)
-        WebDriverWait(Chrome,20)
-        time.sleep(1)
-        Chrome.find_element(By.XPATH,'//*[@id="app"]/div[2]/main/div/section[2]/section/div/div[1]/a[1]').click()
-        if(pyperclip.paste()!=l):
-            text = pyperclip.paste()
-            with open(os.path.join(path,f"{num}-{problem}.md"), 'w',encoding='utf-8') as f:f.write(text)
-        #题目
+print(txt.text)
 
         
-        url_solutin=(f"https://www.luogu.com.cn/problem/solution/{num}")
-        Chrome.get(url_solutin)
-        new_cookie =  {'domain': 'www.luogu.com.cn', 'expiry': 1694747291, 'httpOnly': False, 'name': 'C3VK', 'path': '/', 'sameSite': 'Lax', 'secure': False, 'value': 'e3c0b2'}
-        Chrome.add_cookie(new_cookie)
-        new_cookie = {'domain': '.luogu.com.cn', 'expiry': 1697338993, 'httpOnly': True, 'name': '_uid', 'path': '/', 'sameSite': 'None', 'secure': True, 'value': '667218'}
-        Chrome.add_cookie(new_cookie)
-        new_cookie = {'domain': '.luogu.com.cn', 'expiry': 1697338975, 'httpOnly': True, 'name': '__client_id', 'path': '/', 'sameSite': 'None', 'secure': True, 'value': '4c5dcd654c6e51204df13357faf7401edb5f7f3a'}
-        Chrome.add_cookie(new_cookie)
-        Chrome.get(url_solutin)
-        ele=Chrome.page_source
-        in_txt=BeautifulSoup(ele,"html.parser")
-        md=in_txt.find(class_="solution-article")
-        m="<h1>"+md.prettify()
-        markdown=html2text.html2text(m)
-        with open(os.path.join(path,f"{num}-{problem}-题解.md"), 'w',encoding='utf-8') as f:f.write(markdown)
-        #题解
-
-        time.sleep(5)
         
-        
-        """
+"""
         time.sleep(30)
         Chrome.get(url_solutin)
         cookie= Chrome.get_cookies()
         print(cookie)
         #获取登录cookie"""
 
-        
-Chrome.quit()
 #获取
