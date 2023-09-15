@@ -34,8 +34,12 @@ for content in txt.find_all("a"):
     problem=content.string#题名
 
     if num=="P1005" :
-        
-        """url_problem=(f"https://www.luogu.com.cn/problem/{num}")
+        Chrome= webdriver.Chrome()
+        path=f"C:\\Users\\尘\Desktop\\题解\\{num}-{problem}"
+        if not os.path.exists(path):
+            os.makedirs(path)
+
+        url_problem=(f"https://www.luogu.com.cn/problem/{num}")
         pyperclip.copy("")
         l=""
         Chrome.get(url_problem)
@@ -44,11 +48,10 @@ for content in txt.find_all("a"):
         Chrome.find_element(By.XPATH,'//*[@id="app"]/div[2]/main/div/section[2]/section/div/div[1]/a[1]').click()
         if(pyperclip.paste()!=l):
             text = pyperclip.paste()
-            file_path = f'C:\\Users\\Administrator\\Desktop\\题解\\{num}-{problem}.md'
-            with open(file_path, 'w',encoding='utf-8') as f:f.write(text)"""
+            with open(os.path.join(path,f"{num}-{problem}.md"), 'w',encoding='utf-8') as f:f.write(text)
         #题目
 
-        Chrome= webdriver.Chrome()
+        
         url_solutin=(f"https://www.luogu.com.cn/problem/solution/{num}")
         Chrome.get(url_solutin)
         new_cookie =  {'domain': 'www.luogu.com.cn', 'expiry': 1694747291, 'httpOnly': False, 'name': 'C3VK', 'path': '/', 'sameSite': 'Lax', 'secure': False, 'value': 'e3c0b2'}
@@ -59,11 +62,13 @@ for content in txt.find_all("a"):
         Chrome.add_cookie(new_cookie)
         Chrome.get(url_solutin)
         ele=Chrome.page_source
-        in_txt=BeautifulSoup(ele,features="lxml")
-        md=in_txt.find(class_="marked")
-        #print(md.text)
-        file_path = f'C:\\Users\\Administrator\\Desktop\\题解\\tijie.md'
-        with open(file_path, 'w',encoding='utf-8') as f:f.write(md.text)
+        in_txt=BeautifulSoup(ele,"html.parser")
+        md=in_txt.find(class_="solution-article")
+        m="<h1>"+md.prettify()
+        markdown=html2text.html2text(m)
+        with open(os.path.join(path,f"{num}-{problem}-题解.md"), 'w',encoding='utf-8') as f:f.write(markdown)
+        #题解
+
         time.sleep(5)
         
         
