@@ -5,27 +5,29 @@ from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 import urllib.request,urllib.error
 import bs4,re
-
+import scrapy
+from scrapy.http  import  Request,FormRequest
 import selenium,time,pyperclip,pyautogui,os
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
-
+import html2text
+import os
 
 
 headers={
     "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36",
-    "Cookie":"login_referer=https%3A%2F%2Fwww.luogu.com.cn%2Fauth%2Flogin;_uid=667218;__client_id=74a5e8b36aa466ce90a9399a9c4004aa7bb6efc0;C3VK=0d19c2"
+    "Cookie":"c"
 }
 #防止404和跳过登录
 
-response=requests.get("https://www.luogu.com.cn/problem/list?page=1",headers=headers)
-html=response.text
+responses=requests.get("https://www.luogu.com.cn/problem/list?page=1",headers=headers)
+html=responses.text
 txt=BeautifulSoup(html,features="lxml")
 #获取page内容
 
-Chrome=webdriver.Chrome()
+
 
 for content in txt.find_all("a"):
     num=content.get("href")#编号
@@ -46,19 +48,31 @@ for content in txt.find_all("a"):
             with open(file_path, 'w',encoding='utf-8') as f:f.write(text)"""
         #题目
 
-
+        Chrome= webdriver.Chrome()
         url_solutin=(f"https://www.luogu.com.cn/problem/solution/{num}")
         Chrome.get(url_solutin)
+        new_cookie =  {'domain': 'www.luogu.com.cn', 'expiry': 1694747291, 'httpOnly': False, 'name': 'C3VK', 'path': '/', 'sameSite': 'Lax', 'secure': False, 'value': 'e3c0b2'}
+        Chrome.add_cookie(new_cookie)
+        new_cookie = {'domain': '.luogu.com.cn', 'expiry': 1697338993, 'httpOnly': True, 'name': '_uid', 'path': '/', 'sameSite': 'None', 'secure': True, 'value': '667218'}
+        Chrome.add_cookie(new_cookie)
+        new_cookie = {'domain': '.luogu.com.cn', 'expiry': 1697338975, 'httpOnly': True, 'name': '__client_id', 'path': '/', 'sameSite': 'None', 'secure': True, 'value': '4c5dcd654c6e51204df13357faf7401edb5f7f3a'}
+        Chrome.add_cookie(new_cookie)
+        Chrome.get(url_solutin)
+        ele=Chrome.page_source
+        in_txt=BeautifulSoup(ele,features="lxml")
+        print(in_txt.find("marked"))
+        #file_path = f'c:\\Users\\尘\\Desktop\\题解\\tijie.md'
+        #with open(file_path, 'w',encoding='utf-8') as f:f.write()
+        time.sleep(5)
         
+        
+        """
+        time.sleep(30)
+        Chrome.get(url_solutin)
+        cookie= Chrome.get_cookies()
+        print(cookie)
+        #获取登录cookie"""
 
-        solution= Chrome.find_elements_by_class_name("marked")
-        for so in solution:
-            print(so.text)
-
-    
-    
         
-        
-       
 Chrome.quit()
 #获取
