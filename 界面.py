@@ -14,6 +14,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 import html2text
 import os
+import sys
+import threading
 
 #防止404
 headers={
@@ -25,6 +27,12 @@ headers={
 root = tk.Tk()
 root.title("题目筛选器")
 root.geometry("960x540+500+150")
+
+def thread_it(func, *args):
+    '''将函数打包进线程'''
+    t = threading.Thread(target=func, args=args) 
+    t.setDaemon(True) 
+    t.start()
 
 # 题目难度
 difficulty_label = tk.Label(root, text="请选择题目难度：")
@@ -108,10 +116,10 @@ def run_or_die():
     pagenum=pagenum+2
     print(pagenum)
 
+
     chrome_options =webdriver.ChromeOptions()
     chrome_options.headless = True
     for i in range(1,pagenum):
-        print(i)
         responses=requests.get(f"https://www.luogu.com.cn/problem/list?type={ty}&difficulty={dit}&page={i}&keyword={keyword}",headers=headers)
         html=responses.text
         txt=BeautifulSoup(html,features="lxml")
@@ -124,13 +132,14 @@ def run_or_die():
 
                 nums=nums-1
                 if nums <0:
+                    print("爬取结束")
                     break
                 else:
-
+                    #解析题目内容
                     Chrome= webdriver.Chrome()
                     Chrome.minimize_window()
-                    path=f"C:\\Users\\Administrator\\Desktop\\题解\\{dit}-{keyword}\\{num}-{problem}"
-                
+                    path=f"D:\\题解\\{dit}-{keyword}\\{num}-{problem}"
+                    print(f"正在爬取{num}题目")
                     if not os.path.exists(path):
                         os.makedirs(path)
 
@@ -145,8 +154,9 @@ def run_or_die():
                         text = pyperclip.paste()
                         with open(os.path.join(path,f"{num}-{problem}.md"), 'w',encoding='utf-8') as f:f.write(text)
                     #题目
-
+                    print("爬取成功")
                     
+                    #伪登录
                     url_solutin=(f"https://www.luogu.com.cn/problem/solution/{num}")
                     Chrome.get(url_solutin)
                     new_cookie =  {'domain': 'www.luogu.com.cn', 'expiry': 1694747291, 'httpOnly': False, 'name': 'C3VK', 'path': '/', 'sameSite': 'Lax', 'secure': False, 'value': 'e3c0b2'}
@@ -157,6 +167,8 @@ def run_or_die():
                     Chrome.add_cookie(new_cookie)
                     Chrome.get(url_solutin)
 
+                    #解析题解
+                    print(f"正在爬取{num}题解")
                     ele=Chrome.page_source
                     in_txt=BeautifulSoup(ele,"html.parser")
                     md=in_txt.find(class_="solution-article")
@@ -165,8 +177,8 @@ def run_or_die():
                     markdown=html2text.html2text(m)
                     with open(os.path.join(path,f"{num}-{problem}-题解.md"), 'w',encoding='utf-8') as f:f.write(markdown)
                     #题解
-
-                    time.sleep(5)
+                    print("爬取成功")
+                    time.sleep(1)
                     
                     
             
@@ -179,7 +191,7 @@ def run_or_die():
                 
             Chrome.quit()
      
-run_button = tk.Button(root,text="崩溃",command=run_or_die)
+run_button = tk.Button(root,text="运行",command=lambda :thread_it(run_or_die))
 run_button.grid(row=6,column=0,padx=10,pady=10)
 
 # 启动主事件循环
