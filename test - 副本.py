@@ -28,16 +28,11 @@ txt=BeautifulSoup(html,features="lxml")
 #获取page内容
 
 
-
-for content in txt.find_all("a"):
-    num=content.get("href")#编号
-    problem=content.string#题名
-
-    if num=="P1005" :
-        Chrome= webdriver.Chrome()
-        path=f"C:\\Users\\尘\Desktop\\题解\\{num}-{problem}"
-        if not os.path.exists(path):
-            os.makedirs(path)
+num="P2275"
+Chrome= webdriver.Chrome()
+path=f"C:\\Users\\Administrator\\Desktop\\题解\\{num}"
+if not os.path.exists(path):
+        os.makedirs(path)
 
         url_problem=(f"https://www.luogu.com.cn/problem/{num}")
         pyperclip.copy("")
@@ -48,7 +43,7 @@ for content in txt.find_all("a"):
         Chrome.find_element(By.XPATH,'//*[@id="app"]/div[2]/main/div/section[2]/section/div/div[1]/a[1]').click()
         if(pyperclip.paste()!=l):
             text = pyperclip.paste()
-            with open(os.path.join(path,f"{num}-{problem}.md"), 'w',encoding='utf-8') as f:f.write(text)
+            with open(os.path.join(path,f"{num}-.md"), 'w',encoding='utf-8') as f:f.write(text)
         #题目
 
         
@@ -64,6 +59,7 @@ for content in txt.find_all("a"):
         ele=Chrome.page_source
         in_txt=BeautifulSoup(ele,"html.parser")
         md=in_txt.find(class_="solution-article")
+        if md==None:print("rigth")
         m="<h1>"+md.prettify()
         markdown=html2text.html2text(m)
         with open(os.path.join(path,f"{num}-{problem}-题解.md"), 'w',encoding='utf-8') as f:f.write(markdown)
